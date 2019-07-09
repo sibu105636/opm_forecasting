@@ -27,5 +27,8 @@ Dropouts are used instead of using traditional regularizers as which also acheiv
 
 ####  References
 Following references can be useful:
+ * [Introduction to Forecasting in Machine Learning and Deep Learning](https://www.youtube.com/watch?v=bn8rVBuIcFg&t=598s)
  * [Intro to. Neural Network](https://www.youtube.com/watch?v=aircAruvnKk)
  * [Keras Functional API](https://keras.io/getting-started/functional-api-guide/)
+ * [Two Effective Algorithms for Time Series Forecasting](https://www.youtube.com/watch?v=VYpAodcdFfA&t=3s)
+ * [Linear Model For Time Series Forecasting](https://www.youtube.com/watch?v=68ABAU_V8qI)
