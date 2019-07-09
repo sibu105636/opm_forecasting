@@ -25,11 +25,11 @@ if __name__ == '__main__':
     if not file_exists( args.encoder_path ):
         print('[ERROR] Check if the encoder_path : "%s" exists'%args.encoder_path )
         exit(-3)
-    if not os._isdir( args.model_dir ): 
+    if not path._isdir( args.model_dir ): 
         print('[ERROR] Check if the model directory : "%s" exists'%args.model_dir )
         exit(-4)
     if args.training :
-        if not os._isdir( args.pred_dir ):
+        if not path._isdir( args.pred_dir ):
             print('[ERROR] Check the pred directory : "%s" exists'%args.pred_dir )
             exit(-4)
     #### LOAD THE MODLE HERE
