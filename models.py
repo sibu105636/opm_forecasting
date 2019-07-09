@@ -13,12 +13,22 @@ from matplotlib import pyplot as plt
 ## Declare the encoder-decoder model
 class VAE:
     def __init__(self,path_to_save='',embedding_dim = 128, input_feat = 2 ,look_back = 28, use_next = 7 ):
+        '''
+         Parameters:
+         --------------
+         `path_to_save`  : default path to save the model at\n
+         `embedding_dim` : number of feature to be extracted from the past data\n
+         `input_feat`    : number of features fed into encoder \n
+         `look_back`     : number of days to look back into history\n
+         `use_next`      : number of days in future to look for decoding purpose
+        '''
         self.path_to_save = path_to_save
         self.embed_dim = embedding_dim
         self.look_back = look_back
         self.use_next = use_next 
         self.features = input_feat
         self.vae_in = Input( shape = (self.look_back, self.features), name = 'encoderIn')
+        # # recurrent_dropouts 
         self.vae_lstm = LSTM( self.embed_dim, return_state = True, return_sequences = False, recurrent_dropout = .3, name = 'encoder' )
         self.vae_lstm_out, self.vae_lstm_h, self.vae_lstm_c = self.vae_lstm( self.vae_in )
         self.decoder_state = [ self.vae_lstm_h, self.vae_lstm_c ]
@@ -30,25 +40,51 @@ class VAE:
         self.history = None
         self.callbacks = []
     def add_Callback(self,callback):
+        '''
+        Parmeters :
+        -------------
+        `callback` : Callback Object for the VAE
+        --------
+        for refernce : https://medium.com/singlestone/keras-callbacks-monitor-and-improve-your-deep-learning-205a8a27e91c
+                       https://keras.io/callbacks/
+        '''
         self.callbacks.append(callback)
     def compile(self, loss = 'mse', optimizer = 'adam'):
         ### Don't use  custom loss will result in error during storing the model
         self.vae.compile(loss= loss,optimizer  = optimizer)
     def graph(self):
+        '''
+        function that shows the graph of the VAE
+        '''
         plot_model(self.vae, to_file='vae.png', show_shapes=True, show_layer_names=True)
         img=mpimg.imread('vae.png')
         imgplot = plt.imshow(img)
         plt.show()
         # SVG(model_to_dot(self.vae,show_shapes = True).create(prog ='dot',format='SVG')) 
     def summary(self):
+        '''
+        Textual Details of the models
+        '''
         print( self.vae.summary() )
     def load_from(self, path_to_model = '' ):
+        '''
+        loads already stored model
+        Parameters:
+        -------------
+        `path_to_model`: Location of the stored VAE model
+        '''
         if path_to_model == '':
             print( "Cann't load from the empty path ")
         else:
             print('loading from %s'%path_to_model)
             self.vae = load_model(path_to_model)
-    def save_to( self, path_to_save ):
+    def save_to( self, path_to_save = None):
+        '''
+        store the model to particular location
+        Parameters:
+        -------
+        `path_to_save` : location to save the VAE model at
+        '''
         if self.path_to_save == '' and path_to_save == None:
             print('Should specify a path to save model... ')
         else: 
@@ -56,6 +92,17 @@ class VAE:
                 self.path_to_save = path_to_save
             self.vae.save(self.path_to_save)
     def fit(self, encoderIn,decoderIn, decoderOut , path_to_save = None, batch_size = 180, epochs = 10 ):
+        '''
+        function to train the VAE model
+        Parameters:
+        ------------
+        `encoderIn`  : input features for the encoder, size: ( ,`look_back`,`input_feat`)\n
+        `decoderIn`  : input features for the decoder, size: ( ,`use_next` ,`input_feat` )\n
+        `decoderOut` : out features for the decoder\n
+        `path_to_save` : location to store the best trained model.\n
+        `batch_size` : batch size for the training purpose\n
+        `epochs`     : Number of epochs for the training purpose.   
+        '''
         if self.path_to_save == '' and path_to_save == None:
             print('Should specify a path to save for training ... ')
         else: 
@@ -68,12 +115,29 @@ class VAE:
     def predict(self, encoderIn,decoderIn , path_to_save = None ):
         return  self.vae.predict( {'encoderIn':encoderIn, 'decoderIn':decoderIn } )
     def freeze(self):
+        '''
+        Freezes the VAE models,i.e. no changes to the model can be done further
+        '''
         for layer in self.vae.layers:
             layer.trainable = False
+    def unfreeze(self):
+        '''
+        Unreezes the VAE models,i.e.  changes to the model can be done further
+        '''
+        for layer in self.vae.layers:
+            layer.trainable = True
+        
     def  get_encoder_in(self):
         # self.freeze()
+        '''
+        Returns the input layer of the encoder
+        '''
         return self.vae.get_layer('encoderIn').input
+
     def get_encoder_out(self):
+        '''
+        Returns the encoder output layer
+        '''
         out,_,_=  self.vae.get_layer('encoder').output
         return out
 
