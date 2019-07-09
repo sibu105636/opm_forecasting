@@ -1,3 +1,4 @@
+
 # Time Series Forecasting
 A time series is a series of data points indexed in time order. Most commonly, a time series is a sequence taken at successive equally spaced points in time. For example the stocks data where the data is collected at the end of day. Orders Per Minute(OPM) is also an example of time series where the data is collected at the end of every minute.Time Series data more or less have the seasonality - 'trend' which repeats often at a certain trend like the weekly seasonality where the pattern of opm is repeated every week or even might repeat every day,like peak and low time of the opm might be consistent.
 Time Series Forecasting is an interesting field where in the one needs to predict the future data points(opm in our case). Various Time Series specific statistical models like [ARIMA](https://en.wikipedia.org/wiki/Autoregressive_integrated_moving_average),[Prophet by Facebook](https://facebook.github.io/prophet/) can be used to achieve time series forecasting.
@@ -22,7 +23,9 @@ Below is the structure of the model used for  MLP <br/>
 ![MLP](https://gecgithub01.walmart.com/ukgr/opm_forecasting/blob/master/mlp.png)
 <br/>
 The layers with encoder is the layer from the VAE, which looks back into the past data and gives feature extracted out of it.
-Dropouts are used instead of using traditional regularizers as which also acheives the goal of regularization and also it helps to generalize, a lot well, the distribution of the data. <br/>
-## Refrences: 
+Dropouts are used instead of using traditional regularizers as which also acheives the goal of regularization and also it helps to generalize, a lot well, the distribution of the data.
+
+####  References
+Following references can be useful:
  * [Intro to. Neural Network](https://www.youtube.com/watch?v=aircAruvnKk)
  * [Keras Functional API](https://keras.io/getting-started/functional-api-guide/)
