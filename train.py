@@ -95,6 +95,6 @@ if __name__ == '__main__':
         ystar = np.asarray(dt['Value'])
         yhat = yhat.reshape(len(ystar))
         mape = (np.absolute(ystar-yhat)/ystar).mean()
-        print(mape*100)
+        # print(mape*100)
         print('Accuracy : %.2f %%'%((1-mape)*100))
         # Train the model

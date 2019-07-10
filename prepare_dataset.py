@@ -107,7 +107,7 @@ class DataParse:
         mask2 = cdf[time_label].dt.date == date_
         cdf = cdf[ mask2 ]
         # if train : 
-        print(cdf.tail())
+        # print(cdf.tail())
         cdf = cdf.dropna()
         len_train =  cdf[ 'ynorm' ].count()
         X_encoder = np.zeros( (len_train, self.look_back , self.encoder_feat) )
@@ -124,24 +124,11 @@ class DataParse:
         for i in range(self.look_back):
             X_encoder[:,i,0] -= backup
         Y_mlp[:,0,0] -= backup[:]
-        print(cdf['0y'].describe())
+        # print(cdf['0y'].describe())
         time_ = list(cdf[ time_label ]+ timedelta( days = offset) )
-        print( 'done' )
+        # print( 'done' )
         return ( (self.ymin, self.ymax) ,backup, (X_encoder, Y_mlp) if train else  X_encoder, self.get_exogenous(date_, len_train),time_)
     
-    # def prep_to_train_vae(self,df, time_label, date_, val_label ):
-
-    
-    def get_mask(self,df,time_label,date_to_train,train):
-        start_date = date_to_train - timedelta(days = (self.look_back + 1))
-        # end_date =  date_to_train - timedelta(days = 1) 
-        mask = (df[time_label].dt.date >= start_date)
-        if train :
-            mask = mask & (df[time_label].dt.date <= date_to_train)
-        else: # testing phase
-            mask = mask & (df[time_label].dt.date < date_to_train )  
-        return  mask
-
     def data_shifter(self,cdf,val_label,nh_label,train):
         val_cols = []
         nh_cols = []
@@ -156,67 +143,9 @@ class DataParse:
             nh_cols.append(col )
             cdf.loc[:,col] = cdf[nh_label].shift(periods = 1,freq = timedelta(days = -i)) 
             # cdf[col] = cdf[nh_label].shift(periods = 1,freq = timedelta(days = -i))
-        print('\n'+'--'*50+'\n',cdf.columns,'\n'+'--'*50)
+        # print('\n'+'--'*50+'\n',cdf.columns,'\n'+'--'*50)
         return ( val_cols, nh_cols )   
 
-    def prep_data(self,dataframe,date_to_train,train):
-        '''
-         Dated Version, INSTEAD USE `` prep_to_train_mlp ``
-        '''
-        dataframe = dataframe.reset_index()
-        dataframe.loc[:,'ds'] = pd.to_datetime(dataframe['ds'])
-        cdf = dataframe[self.get_mask(df =dataframe,time_label= 'ds',date_to_train = date_to_train ,train = train)]
-        cdf.loc[:,'dtx'] = cdf['ds']
-        cdf.set_index('dtx',inplace = True)
-        cdf.loc[:,'inh'] = cdf['ds'].dt.date.apply( lambda x : 1 if x in uk_holidays else 0)
-        ##############################
-        ######## Scale Normalization
-        self.get_min_max( dataframe = cdf , val_label = 'y' )
-        cdf.loc[:,'ynorm'] = ( cdf['y'] - self.ymin ) / ( self.ymax )
-        print(cdf.ynorm.describe())
-        ############################### 
-        val_cols,nh_cols = self.data_shifter(cdf =cdf,val_label='ynorm',nh_label = 'inh',train = train)
-        print('\n'+'*'*50+'\n',cdf.columns,'\n'+'*'*50)
-        cdf = cdf.dropna()
-        X_encoder = np.zeros( ((cdf.count()['ds']) , self.look_back, self.encoder_feat ) )
-        print('================================================',X_encoder.shape)
-        offset = 0 if train else 1
-        for i in range( -self.look_back+offset , 0+offset):
-            idx = self.look_back+i - offset 
-            col = '%dy'%i
-            X_encoder[:,idx,0] = cdf[col]
-            col = '%dinh'%i
-            X_encoder[:,idx,1] = cdf[col]
-        # print( 'log normalizing')
-        # X_encoder[:,:,0] += self.offset_val
-        # X_encoder[:,:,0] =  np.log(X_encoder[:,:,0])
-        Y_train = np.zeros((len(X_encoder),1))
-        if train:
-            Y_train = np.array(list(cdf['0y'])).reshape(-1,1)
-            Y_train = Y_train.reshape(-1,1,1)
-            # Y_train[:,0,0] += self.offset_val
-            # Y_train[:,0,0] = np.log(Y_train[:,0,0])
-        backup = X_encoder[:,0,0].copy()
-        print('\n\n\n\n\n\n\n\n',backup,'\n\n\n\n')
-        for i in range(1,28):
-            X_encoder[:,i,0] -= X_encoder[:,0,0]
-        if train :
-            Y_train[:,0,0] -= backup[:]
-        X_encoder[:,0,0] = 0
-        x = date_to_train
-        x = .8 if x in self.uk_holidays else  .2 if timedelta(days = 1) + x in self.uk_holidays or  x - timedelta(days = 1)  in self.uk_holidays  else  -10000
-        beta = 0.4
-        h_rbf =  np.exp(-1*((x - .8)**2)/(2*beta))  
-        x = date_to_train.weekday()
-        dow = np.zeros((8))
-        alpha = 0.4
-        dow[0] =  h_rbf
-        for i in range(0,7):
-            dow[i+1] = np.exp(-1*((self.symm_diff(i,x))**2)/(2*alpha)) 
-        X_mlp = np.zeros( ((cdf.count()['ds']) , 1, 8 ) )
-        X_mlp[:,0,:] = dow[:]
-
-        return (list(cdf['ds']),backup,X_encoder, (X_mlp,Y_train)  if train else  X_mlp )
     
     def get_original(self,backup,y_pred , ymin = 0, ymax = 1 ):
         '''
@@ -284,25 +213,3 @@ def read_df( path_to_csv, time_label, val_label, series = 'current', sep =';' , 
 def read_and_clean(path_to_csv,time_label,val_label,series='current',sep=';'):
     df = read_df(path_to_csv,time_label,val_label,series,sep)
     return filter_order_downloads(df,time_label)
-# df  = pd.read_csv('../val_dataset.csv',sep = ';')
-# # print(df.head())
-# df = df[df['Series'] == 'current'] 
-# df['Time']  = pd.to_datetime(df['Time'].astype(str).str[:-6]).sub(timedelta(minutes = 330 ))
-
-# remove_mask = df['Time'].dt.time >= time(0,0,0)
-# remove_mask &= df['Time'].dt.time < time(6,0,0) 
-
-# df.loc[ remove_mask , 'Value' ] = np.nan
-# # plt.show()
-# remove_mask = df['Time'].dt.date >= date(2019,7,2)
-# df.loc[ remove_mask , 'Value' ] = np.nan
-
-# # plt.plot(df['Time'], df['Value'],'o--')
-# # print(df.tail())
-# prep_date = date(2019,7,2)
-
-# parser  = DataParse()
-# parser.get_exogenous(prep_date,1080)
-# # scaller,backup , train_data,train_extra,time_ =  parser.prep_to_train_mlp(   df= df.dropna(),time_label = 'Time',date_ = prep_date,val_label = 'Value',train = False)
-# plt.show()
-# print('done')
