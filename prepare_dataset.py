@@ -213,3 +213,71 @@ def read_df( path_to_csv, time_label, val_label, series = 'current', sep =';' , 
 def read_and_clean(path_to_csv,time_label,val_label,series='current',sep=';'):
     df = read_df(path_to_csv,time_label,val_label,series,sep)
     return filter_order_downloads(df,time_label)
+
+def join_df( path_csv1, path_csv2, time_label='Time', val_label = 'Value' , series = 'Series' ,sep=';', save_to = None ):
+    '''
+    Parameters:
+    -----------
+    `path_csv1` : Path to first csv\n
+    `path_csv2` : Path to second csv\n
+    `save_to`   : Path to save the dataframe  at, if not specified then df won't be saved\n
+    Return :
+    -----------
+    `return_df` : Joined dataframe
+    '''
+    import os.path as path
+    if not path.exists(path_csv1):
+        print('[ERROR] Check if path_csv1 exists')
+        exit(-6)
+    if not path.exists(path_csv2):
+        print('[ERROR] Check if path_csv2 exists')
+        exit(-6)
+    df1 = pd.read_csv(path_csv1,sep = sep).reset_index()
+    df2 = pd.read_csv(path_csv2,sep = sep).reset_index()
+    df1 = path_csv1
+    df2 = path_csv2
+    df1.loc[:,time_label] = pd.to_datetime( df1[ time_label ])
+    df2.loc[:,time_label] = pd.to_datetime( df2[ time_label ])
+    s1 = list(df1[time_label].head(1))[0]
+    s2 = list(df2[time_label].head(1))[0]
+    e1 = list(df1[time_label].tail(1))[0]
+    e2 = list(df2[time_label].tail(1))[0]
+    first_part = ''
+    end_part = ''
+    if s1 ==  s2 :
+        if e1 == e2 :
+            print(' Both this dataframe are same') 
+            exit(1)
+        else:
+            if e1 > e2 :
+                first_part = df1
+                mask       = df2[time_label] > e1
+                end_part   = df2[ mask ]
+            else :
+                first_part = df2
+                mask = df1[time_label] > e2
+                end_part = df1[mask]
+    else : 
+        if s1 > s2 :
+            if e1 <= e2 :
+                print('[WARNING] csv1 is already in csv2')
+                exit(2)
+            else :
+                mask = df2[time_label] < s1 
+                first_part = df2[mask]
+                end_part = df1
+        else:
+            if e1 >= e2 :
+                print('[WARNING] csv2 is already in csv1')
+                exit(2)
+            else :
+                end_part = df2
+                mask = df1[time_label] < s2
+                first_part = df1[mask]
+    return_df = pd.concat( [ first_part , end_part ] ) 
+    return_df = return_df[ [ time_label, val_label, series  ] ]
+    if save_to != None :
+        return_df.to_csv( save_to , sep = sep, index = False )
+    return return_df
+
+
