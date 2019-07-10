@@ -36,6 +36,29 @@ class DataParse:
         else:
             return 7 - b
 
+    def extra_function(self, date_):
+        '''
+        Returns the feature extracted only from the date-time
+        Parameters 
+        ---------------------------
+        date_  : date for which the feature is to be extracted\n
+        Returns 
+        ---------------------------
+        X_mlp : features extracted, size ( len_, 1, 8 )
+        '''
+        x = date_
+        x = .8 if x in self.uk_holidays else  .2 if timedelta(days = 1) + x in self.uk_holidays or  x - timedelta(days = 1)  in self.uk_holidays  else  -10000
+        beta = 0.4
+        h_rbf =  np.exp(-1*((x - .8)**2)/(2*beta))  
+        x = date_.weekday()
+        dow = np.zeros((8))
+        alpha = 0.4
+        dow[0] =  h_rbf
+        xp = ( x+2 )  % 7
+        w = 1 # (.1* (xp+5) )**2 if xp < 5 else .5 if xp == 5 else  0.35
+        for i in range(0,7):
+            dow[i+1] = w * np.exp(-1*((self.symm_diff(i,x))**2)/(2*alpha))
+        return dow
     def get_exogenous(self, date_ , len_ ):
         '''
         Returns the feature extracted only from the date-time
@@ -146,7 +169,38 @@ class DataParse:
         # print('\n'+'--'*50+'\n',cdf.columns,'\n'+'--'*50)
         return ( val_cols, nh_cols )   
 
-    
+    def prep_mlp_train(self,cdf,val_label='Value',time_label='Time',series ='current'):
+        '''
+        This function prepares the data for the training from the given dataset
+        Parameters:
+        ---------------
+        '''
+        cdf.loc[:,time_label] = pd.to_datetime( cdf[time_label] )
+        cdf.loc[:,'inh'] = cdf[time_label].dt.date.apply( lambda x : 1 if x+timedelta( days = 1 ) in self.uk_holidays else 0 )
+        ymax = cdf[val_label].max()
+        ymin = cdf[val_label].min()
+        print( '\n\n'+'****'*20+('\nInput Range <- [ %.3f , %.3f ] '%(ymin, ymax)) + '\n'+'****'*20 +'\n\n' )
+        cdf.loc[:,'ynorm'] = ( cdf[ val_label ] - ymin ) / ( ymax - ymin )  # Sets Input Range <- [ 0 , 1 ]
+        val_cols , nh_cols = self.data_shifter( cdf= cdf,val_label = 'ynorm',nh_label = 'inh',train = True)
+        cdf = cdf.dropna()
+        len_train = cdf['ynorm'].count()
+        X_encoder = np.zeros((len_train, self.look_back, self.encoder_feat))
+        for i in range( -self.look_back,0):
+            col = '%dy'%i
+            idx = 28+i
+            X_encoder[:,idx,0] = cdf[col]
+            col = '%dinh'%i
+            X_encoder[:,idx,1] = cdf[col]
+        Y_mlp = np.zeros( (len_train,1,1) )
+        Y_mlp[:,0,0] = cdf['0y']
+        X_mlp = np.zeros( (len_train,1,self.extra_feat) )
+        X_mlp[:,0,:] = cdf[time_label].dt.date.apply( lambda x: self.extra_function(x) )[:]
+        backup = X_encoder[:,0,0].copy()
+        for i in range(self.look_back):
+            X_encoder[:,i,0] -= backup
+        Y_mlp[:,0,0] -= backup[:]
+        return ( (ymin, ymax), backup, (X_encoder,Y_mlp), X_mlp )
+
     def get_original(self,backup,y_pred , ymin = 0, ymax = 1 ):
         '''
         Returns the data in the actual scale 
