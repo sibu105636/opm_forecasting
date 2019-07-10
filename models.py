@@ -143,6 +143,15 @@ class VAE:
 
 class MLP:
     def __init__( self, path_to_save = '', vae = None,look_back = 28, forecast = 1,extra_feat = 8 ):
+        '''
+        Parameters:
+        ---------------------------
+        `path_to_save` :  default path to save the model at\n
+        `vae`          :  encoder-decoder object i.e.  VAE class object **REQUIRED\n
+        `look_back`    : the number of data to look back int the past\n
+        `forecast`     : the number of days to predict in future\n
+        `extra_feat`   : number of extra features  to be fed in to the mlp 
+        '''
         self.path_to_save = path_to_save
         self.vae  = vae
         self.is_compiled = False
@@ -168,14 +177,26 @@ class MLP:
         self.is_compiled = True
         
     def summary(self):
+        '''
+        Textual Details of the models
+        '''
         print( self.mlp.summary( ) )
     
     def graph(self):
+        '''
+        function that shows the graph of the VAE
+        '''
         plot_model(self.mlp, to_file='mlp.png', show_shapes=True, show_layer_names=True)
         img=mpimg.imread('vae.png')
         imgplot = plt.imshow(img)
         plt.show()
     def load_from(self, path_to_model = '' ):
+        '''
+            loads already stored model
+            Parameters:
+            -------------
+            `path_to_model`: Location of the stored MLP model
+        '''
         if path_to_model == '':
             print( "Cann't load from the empty path ")
         else:
@@ -183,6 +204,12 @@ class MLP:
             self.mlp = load_model(path_to_model)
             self.is_compiled = True
     def save_to( self, path_to_save ):
+        '''
+        store the model to particular location
+        Parameters:
+        -------
+        `path_to_save` : location to save the MLP model at
+        '''
         if self.path_to_save == '' and path_to_save == None:
             print('Should specify a path to save model... ')
         else: 
@@ -190,6 +217,17 @@ class MLP:
                 self.path_to_save = path_to_save
             self.mlp.save(self.path_to_save)
     def fit(self, encoderIn,mlpIn, target , path_to_save = None, batch_size = 180, epochs = 1 ):
+        '''
+        function to train the VAE model
+        Parameters:
+        ------------
+        `encoderIn`  : input features for the encoder, size: ( ,`look_back`,`input_feat`)\n
+        `mlpIn`  : extra input features for the mlp, size: ( ,`1` ,`extra_feat` )\n
+        `target` : label value to be regress for\n
+        `path_to_save` : location to store the best trained model.\n
+        `batch_size` : batch size for the training purpose\n
+        `epochs`     : Number of epochs for the training purpose.   
+        '''
         if self.is_compiled:
             if self.path_to_save == '' and path_to_save == None:
                 print('Should specify a path to save for training ... ')
@@ -205,27 +243,3 @@ class MLP:
     def predict(self, encoderIn,mlpIn , path_to_save = None ):
         
         return  self.mlp.predict( {'encoderIn':encoderIn, 'mlpIn':mlpIn } )
-
-# from prepare_dataset import *
-# path_to_ds = '../val_dataset.csv'
-# df = read_and_clean( path_to_ds,'Time','Value' )
-# # plt.plot(df['Time'],df['Value'])
-# # plt.show()
-# date_ = date(2019,7,1)
-# df2 = df[ df['Time'].dt.date == date_+timedelta(days=1)  ]
-# # df2 = read_df('')
-# print(df2.head())
-# dp = DataParse()
-# (ymin, ymax) ,backup, X_encoder, X_mlp ,time_ = dp.prep_to_train_mlp(df= df, time_label = 'Time',val_label='Value',train=False,date_ = date_  )
-# # print('done')
-# vae = VAE()
-# vae.load_from(path_to_model='../model/vae_custom_loss_v2.hdf5')
-# mlp = MLP(vae =vae)
-# mlp.load_from(path_to_model='../model/mlp_custom_loss___.hdf5')
-# y_pred = mlp.predict(encoderIn=X_encoder,mlpIn = X_mlp)
-# y_pred = dp.get_original(backup,y_pred,ymin,ymax)
-# plt.plot(time_,y_pred,label ='pred')
-# plt.plot(df2['Time'],df2['Value'],label='true')
-# plt.legend()
-# plt.show()
-# print('sd')
