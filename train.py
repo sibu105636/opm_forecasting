@@ -35,29 +35,6 @@ if __name__ == '__main__':
     #### LOAD THE MODLE HERE
     from models import *
     from prepare_dataset import *
-    # from prepare_dataset import *
-    # path_to_ds = '../val_dataset.csv'
-    # df = read_and_clean( path_to_ds,'Time','Value' )
-    # # plt.plot(df['Time'],df['Value'])
-    # # plt.show()
-    # date_ = date(2019,7,1)
-    # df2 = df[ df['Time'].dt.date == date_+timedelta(days=1)  ]
-    # # df2 = read_df('')
-    # print(df2.head())
-    # dp = DataParse()
-    # (ymin, ymax) ,backup, X_encoder, X_mlp ,time_ = dp.prep_to_train_mlp(df= df, time_label = 'Time',val_label='Value',train=False,date_ = date_  )
-    # # print('done')
-    # vae = VAE()
-    # vae.load_from(path_to_model='../model/vae_custom_loss_v2.hdf5')
-    # mlp = MLP(vae =vae)
-    # mlp.load_from(path_to_model='../model/mlp_custom_loss___.hdf5')
-    # y_pred = mlp.predict(encoderIn=X_encoder,mlpIn = X_mlp)
-    # y_pred = dp.get_original(backup,y_pred,ymin,ymax)
-    # plt.plot(time_,y_pred,label ='pred')
-    # plt.plot(df2['Time'],df2['Value'],label='true')
-    # plt.legend()
-    # plt.show()
-    # print('sd')
     d_parser = DataParse()
     input_df =read_and_clean(path_to_csv = args.input_path,time_label = 'Time',val_label = 'Value',sep=';')
     # plt.plot(input_df['Time'], input_df['Value'])
