@@ -172,15 +172,17 @@ class DataParse:
     def prep_mlp_train(self,cdf,val_label='Value',time_label='Time',series ='current'):
         '''
         This function prepares the data for the training from the given dataset
-        Parameters:
-        ---------------
         '''
+        cdf = cdf.copy().reset_index()
         cdf.loc[:,time_label] = pd.to_datetime( cdf[time_label] )
         cdf.loc[:,'inh'] = cdf[time_label].dt.date.apply( lambda x : 1 if x+timedelta( days = 1 ) in self.uk_holidays else 0 )
         ymax = cdf[val_label].max()
         ymin = cdf[val_label].min()
         print( '\n\n'+'****'*20+('\nInput Range <- [ %.3f , %.3f ] '%(ymin, ymax)) + '\n'+'****'*20 +'\n\n' )
         cdf.loc[:,'ynorm'] = ( cdf[ val_label ] - ymin ) / ( ymax - ymin )  # Sets Input Range <- [ 0 , 1 ]
+        cdf.loc[:,'dt'] = cdf[time_label]
+        cdf.loc[:,'ds'] = cdf['dt']
+        cdf = cdf.set_index('dt')
         val_cols , nh_cols = self.data_shifter( cdf= cdf,val_label = 'ynorm',nh_label = 'inh',train = True)
         cdf = cdf.dropna()
         len_train = cdf['ynorm'].count()
@@ -193,13 +195,20 @@ class DataParse:
             X_encoder[:,idx,1] = cdf[col]
         Y_mlp = np.zeros( (len_train,1,1) )
         Y_mlp[:,0,0] = cdf['0y']
-        X_mlp = np.zeros( (len_train,1,self.extra_feat) )
-        X_mlp[:,0,:] = cdf[time_label].dt.date.apply( lambda x: self.extra_function(x) )[:]
+        # cdf = cdf.reset_index()
+        beta = 0.4
+        cdf['h_rbf'] = cdf[ 'ds' ].dt.date.apply( lambda x : np.exp(-1*(( (.8 if x in self.uk_holidays else  .2 if timedelta(days = 1) + x in uk_holidays or  x - timedelta(days = 1)  in uk_holidays  else  -10000) - .8)**2)/(2*beta))  )
+        
+        # cdf['h_rbf'] = cdf['h_rbf'].apply( lambda x : np.exp(-1*((x - .8)**2)/(2*beta))   )
+        for i in range(0,7):
+            cdf['%dw'%i] = cdf['ds'].dt.dayofweek.apply( lambda x : np.exp(-1*((self.symm_diff(i,x))**2)/(2*beta))  )
+        X_mlp_in = cdf[['h_rbf']+['%dw'%i for i  in range(0,7)]].values
+        X_mlp_in = X_mlp_in.reshape(-1,1,8)
         backup = X_encoder[:,0,0].copy()
         for i in range(self.look_back):
             X_encoder[:,i,0] -= backup
         Y_mlp[:,0,0] -= backup[:]
-        return ( (ymin, ymax), backup, (X_encoder,Y_mlp), X_mlp )
+        return ( (ymin, ymax), backup, (X_encoder,Y_mlp), X_mlp_in )
 
     def get_original(self,backup,y_pred , ymin = 0, ymax = 1 ):
         '''
@@ -241,7 +250,7 @@ def filter_order_downloads( dataframe , time_label ):
     df = df[mask]
     return df
 
-def read_df( path_to_csv, time_label, val_label, series = 'current', sep =';' ,  ):
+def read_df( path_to_csv, time_label='Time', val_label='Value', series = 'current', sep =';' ,  ):
     '''
     Reads the data from csv
     Params :
@@ -264,7 +273,7 @@ def read_df( path_to_csv, time_label, val_label, series = 'current', sep =';' , 
     else:
         df.loc[:,time_label] = pd.to_datetime( df[time_label]  )
     return df
-def read_and_clean(path_to_csv,time_label,val_label,series='current',sep=';'):
+def read_and_clean(path_to_csv,time_label='Time',val_label='Value',series='current',sep=';'):
     df = read_df(path_to_csv,time_label,val_label,series,sep)
     return filter_order_downloads(df,time_label)
 
