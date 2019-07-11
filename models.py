@@ -106,7 +106,8 @@ class VAE:
         `epochs`     : Number of epochs for the training purpose.   
         '''
         if self.path_to_save == '' and path_to_save == None:
-            print('Should specify a path to save for training ... ')
+            print('[ERROR] Should specify a path to save for training ... ')
+            exit(-1)
         else: 
             if path_to_save != None:
                 self.path_to_save = path_to_save
@@ -232,7 +233,8 @@ class MLP:
         '''
         if self.is_compiled:
             if self.path_to_save == '' and path_to_save == None:
-                print('Should specify a path to save for training ... ')
+                print('[ERROR] Should specify a path to save for training ... ')
+                exit(-1)
             else: 
                 if path_to_save != None:
                     self.path_to_save = path_to_save
