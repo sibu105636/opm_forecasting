@@ -4,7 +4,7 @@ import tensorflow as tf
 import keras.backend as K 
 from keras.layers import Dropout, LSTM, Dense, TimeDistributed, Reshape, Concatenate, Input
 from keras.models import load_model, Model, Sequential
-from keras.callbacks import EarlyStopping, ModelCheckpoint
+from keras.callbacks import  ModelCheckpoint #,EarlyStopping
 from keras.utils.vis_utils import model_to_dot
 from keras.utils.vis_utils import plot_model
 from IPython.display import SVG
@@ -12,7 +12,7 @@ from matplotlib import image as mpimg
 from matplotlib import pyplot as plt
 ## Declare the encoder-decoder model
 class VAE:
-    def __init__(self,path_to_save='',embedding_dim = 128, input_feat = 2 ,look_back = 28, use_next = 7 ):
+    def __init__(self,path_to_save='',embedding_dim = 128, input_feat = 2 ,look_back = 28, use_next = 7, decoder_feat = 2 ):
         '''
          Parameters:
          --------------
@@ -20,13 +20,15 @@ class VAE:
          `embedding_dim` : number of feature to be extracted from the past data\n
          `input_feat`    : number of features fed into encoder \n
          `look_back`     : number of days to look back into history\n
-         `use_next`      : number of days in future to look for decoding purpose
+         `use_next`      : number of days in future to look for decoding purpose\n
+         `decoder_feat`  : number of features to expect from encoder 
         '''
         self.path_to_save = path_to_save
         self.embed_dim = embedding_dim
         self.look_back = look_back
         self.use_next = use_next 
         self.features = input_feat
+        self.decoder_feat = decoder_feat
         self.vae_in = Input( shape = (self.look_back, self.features), name = 'encoderIn')
         # # recurrent_dropouts 
         self.vae_lstm = LSTM( self.embed_dim, return_state = True, return_sequences = False, recurrent_dropout = .3, name = 'encoder' )
@@ -35,7 +37,7 @@ class VAE:
         self.vae_decoder_in = Input( shape = (self.use_next , self.features), name = 'decoderIn')
         self.vae_decoder_lstm = LSTM( self.embed_dim, return_state = False, return_sequences = True, recurrent_dropout = .2, name = 'decoder' )
         self.vae_decoder_out  =  self.vae_decoder_lstm(self.vae_decoder_in, initial_state = self.decoder_state )
-        self.vae_out = TimeDistributed( Dense( self.features ), name = 'output')(self.vae_decoder_out)
+        self.vae_out = TimeDistributed( Dense( self.decoder_feat ), name = 'output')(self.vae_decoder_out)
         self.vae  = Model( inputs = [ self.vae_in, self.vae_decoder_in ], outputs = self.vae_out )
         self.history = None
         self.callbacks = []

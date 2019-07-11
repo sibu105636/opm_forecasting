@@ -239,8 +239,8 @@ class DataParse:
         len_train = cdf['ynorm'].count()
 
         X_encoder = np.zeros((len_train, self.look_back, self.encoder_feat))
-        X_decoder = np.zeros( (len_train,self.use_next,1) )
-        Y_decoder = np.zeros( (len_train,self.use_next,1) )
+        X_decoder = np.zeros( (len_train,self.use_next,self.encoder_feat) )
+        Y_decoder = np.zeros( (len_train,self.use_next,self.encoder_feat) )
 
         for i in range( -self.look_back,0):
             col = '%dy'%i
@@ -251,7 +251,7 @@ class DataParse:
             col = '%dinh'%i
             X_encoder[:,idx,1] = cdf[col]
             if i >= -6:
-                X_decoder[:,6+i,0] = cdf[col]
+                X_decoder[:,6+i,1] = cdf[col]
 
         for i in range( 0,7):
             idx = i
@@ -260,7 +260,7 @@ class DataParse:
             # Y_decoder[:,idx,0] = np.log(cdf[col])
             Y_decoder[:,idx,0] = cdf[col]
             col = '%s%dinh'%(sym,i)
-            # Y_decoder[:,idx,1] = cdf[col]
+            Y_decoder[:,idx,1] = cdf[col]
         
         backup = X_encoder[:,0,0].copy()
         for i in range(self.look_back):
