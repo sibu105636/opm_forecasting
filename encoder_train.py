@@ -12,7 +12,7 @@ if __name__ == '__main__':
     parser.add_argument( '--fresh', type=bool, default = False, help= ' True => Train the model from scratch !! ' )
     parser.add_argument( '--input_path', type=str, help='path to the input dataset for training / testing' ,required = True )
     parser.add_argument( '--encoder_path', type = str,  help='path to the stored encoder-decoder model for loading ' )
-    parser.add_argument( '--store_at', type = str, default = './stored_models/', help = 'dir in which model is to be stored' )
+    parser.add_argument( '--store_at', type = str, default = './stored_models/', help = 'directory in which model is to be stored' )
     parser.add_argument( '--epochs', type = int ,default = 10, help = 'number of epochs, applicable only for training ' )
     parser.add_argument( '--batch_size', type = int, default = 180, help='batch size '  )
     args = parser.parse_args()
