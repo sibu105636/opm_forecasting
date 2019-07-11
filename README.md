@@ -32,3 +32,78 @@ Following references can be useful:
  * [Keras Functional API](https://keras.io/getting-started/functional-api-guide/)
  * [Two Effective Algorithms for Time Series Forecasting](https://www.youtube.com/watch?v=VYpAodcdFfA&t=3s)
  * [Linear Model For Time Series Forecasting](https://www.youtube.com/watch?v=68ABAU_V8qI)
+### To Execute
+#### Active Learning :
+    ```python .\train.py    --input_path <path_to_csv> --model_path <path_to_mlp> --encoder_path <path_to_vae> --pred_dir <dir_to_csv_in> --model_dir <dir_to_store_model> --epochs <number_of_epochs>```
+    ```
+            usage: train.py [-h] [--auto_dt AUTO_DT] [--date_to_pred DATE_TO_PRED]
+                            --input_path INPUT_PATH --model_path MODEL_PATH --encoder_path
+                            ENCODER_PATH [--model_dir MODEL_DIR] [--epochs EPOCHS]
+                            [--batch_size BATCH_SIZE] [--pred_dir PRED_DIR]
+                            [--to_UK_tz TO_UK_TZ]
+
+            optional arguments:
+            -h, --help            show this help message and exit
+            --auto_dt AUTO_DT     True -> pick the date automatically False -> Specifiy
+                                    the date
+            --date_to_pred DATE_TO_PRED
+                                    date [YYYY-MM-DD] for which prediction is to be done
+            --input_path INPUT_PATH
+                                    path to the input dataset for training / testing
+            --model_path MODEL_PATH
+                                    path to the stored model for saving / loading
+            --encoder_path ENCODER_PATH
+                                    path to the stored encoder-decoder model for loading
+            --model_dir MODEL_DIR
+                                    dir in which model is to be stored
+            --epochs EPOCHS       number of epochs, applicable only for training
+            --batch_size BATCH_SIZE
+                                    batch size
+            --pred_dir PRED_DIR   directory to store the output
+            --to_UK_tz TO_UK_TZ   True => datetime in UK time zone else in INDIAN time
+                                    zone
+    ```
+#### Training MLP only :
+    ```
+            usage: model_train.py [-h] [--fresh FRESH] --input_path INPUT_PATH
+                                [--mlp_path MLP_PATH] [--freeze_encoder FREEZE_ENCODER]
+                                --encoder_path ENCODER_PATH [--store_at STORE_AT]
+                                [--epochs EPOCHS] [--batch_size BATCH_SIZE]
+
+            arguments:
+            -h, --help            show this help message and exit
+            --fresh FRESH         True => Train the model from scratch !!
+            --input_path INPUT_PATH
+                                    path to the input dataset for training / testing
+            --mlp_path MLP_PATH   path to the stored mlp model for loading
+            --freeze_encoder FREEZE_ENCODER
+                                    True => the encoder layer will be frozen during
+                                    training
+            --encoder_path ENCODER_PATH
+                                    path to the stored encoder-decoder model for loading
+            --store_at STORE_AT   directory in which model is to be stored
+            --epochs EPOCHS       number of epochs, applicable only for training
+            --batch_size BATCH_SIZE
+                                    batch size
+    
+    ```
+#### Training Encoder Only:
+ ```
+            usage: encoder_train.py [-h] [--fresh FRESH] --input_path INPUT_PATH
+                                    [--encoder_path ENCODER_PATH] [--store_at STORE_AT]
+                                    [--epochs EPOCHS] [--batch_size BATCH_SIZE]
+
+            optional arguments:
+            -h, --help            show this help message and exit
+            --fresh FRESH         True => Train the model from scratch !!
+            --input_path INPUT_PATH
+                                    path to the input dataset for training / testing
+            --encoder_path ENCODER_PATH
+                                    path to the stored encoder-decoder model for loading
+            --store_at STORE_AT   directory in which model is to be stored
+            --epochs EPOCHS       number of epochs, applicable only for training
+            --batch_size BATCH_SIZE
+                                    batch size
+    
+    ```
+    
