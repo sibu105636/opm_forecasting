@@ -210,6 +210,66 @@ class DataParse:
         Y_mlp[:,0,0] -= backup[:]
         return ( (ymin, ymax), backup, (X_encoder,Y_mlp), X_mlp_in )
 
+    
+    def prep_vae_train( self,cdf,val_label='Value',time_label='Time',series='current'):
+        '''
+         Function to prepare the data for training encoder-decoder(VAE) model only
+        '''
+        cdf = cdf.copy().reset_index()
+        cdf.loc[:,time_label] = pd.to_datetime( cdf[time_label] )
+        cdf.loc[:,'inh'] = cdf[time_label].dt.date.apply( lambda x : 1 if x+timedelta( days = 1 ) in self.uk_holidays else 0 )
+        ymax = cdf[val_label].max()
+        ymin = cdf[val_label].min()
+        print( '\n\n'+'****'*20+('\nInput Range <- [ %.3f , %.3f ] '%(ymin, ymax)) + '\n'+'****'*20 +'\n\n' )
+        cdf.loc[:,'ynorm'] = ( cdf[ val_label ] - ymin ) / ( ymax - ymin )  # Sets Input Range <- [ 0 , 1 ]
+        cdf.loc[:,'dt'] = cdf[time_label]
+        cdf.loc[:,'ds'] = cdf['dt']
+        cdf = cdf.set_index('dt')
+        val_cols , nh_cols = self.data_shifter( cdf= cdf,val_label = 'ynorm',nh_label = 'inh',train = True)
+        # forward shifter
+        for i in range(1,7):
+            col = '+%dy'%i
+            val_cols.append(col)
+            cdf.loc[:,col] = cdf['ynorm'].shift(periods= 1, freq = timedelta(days=-i))
+            col = '+%dinh'%i
+            cdf.loc[:,col] = cdf['inh'].shift(periods= 1, freq = timedelta(days=-i))
+
+        cdf = cdf.dropna()
+
+        len_train = cdf['ynorm'].count()
+
+        X_encoder = np.zeros((len_train, self.look_back, self.encoder_feat))
+        X_decoder = np.zeros( (len_train,self.use_next,1) )
+        Y_decoder = np.zeros( (len_train,self.use_next,1) )
+
+        for i in range( -self.look_back,0):
+            col = '%dy'%i
+            idx = 28+i
+            X_encoder[:,idx,0] = cdf[col]
+            if i >= -6:
+                X_decoder[:,6+i,0] = cdf[col]
+            col = '%dinh'%i
+            X_encoder[:,idx,1] = cdf[col]
+            if i >= -6:
+                X_decoder[:,6+i,0] = cdf[col]
+
+        for i in range( 0,7):
+            idx = i
+            sym ='' if i == 0 else '+'
+            col = '%s%dy'%(sym,i)
+            # Y_decoder[:,idx,0] = np.log(cdf[col])
+            Y_decoder[:,idx,0] = cdf[col]
+            col = '%s%dinh'%(sym,i)
+            # Y_decoder[:,idx,1] = cdf[col]
+        
+        backup = X_encoder[:,0,0].copy()
+        for i in range(self.look_back):
+            X_encoder[:,i,0] -= backup
+        for i in range(self.use_next):
+            X_decoder[:,i,0] -= backup
+            Y_decoder[:,i,0] -= backup
+        return ( (ymin, ymax), backup, (X_encoder,X_decoder), Y_decoder )
+        
     def get_original(self,backup,y_pred , ymin = 0, ymax = 1 ):
         '''
         Returns the data in the actual scale 
