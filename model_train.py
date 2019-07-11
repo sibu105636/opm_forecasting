@@ -46,6 +46,8 @@ if __name__ == '__main__':
     from models import VAE
     vae = VAE(path_to_save = '') 
     vae.load_from(path_to_model=args.encoder_path)
+    if args.freeze_encoder:
+        vae.freeze()
     from models import MLP
     mlp = MLP(vae = vae)
     if not args.fresh:
