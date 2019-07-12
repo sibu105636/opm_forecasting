@@ -8,11 +8,13 @@ In our implementation we have deviated a bit from the paper where in we tried to
 The above figure presents an overview of the model used for forecasting. Although the model might appear similar to be the one suggested in the [paper](https://arxiv.org/pdf/1709.01907.pdf)  but there exists a small difference in the internals of model.<br/>Our process can be broken into two steps:
   * Pre-Training
   * Inference/Prediction<br/>
+  
  #### Pre-Training:
  This step involves using Encoder-Decoder model where in encoder extracts feature out of the data and decoder uses this extracted feature to generate the original data back.LSTMs for encoder as well as for decoder. The entire pre-training step is done in *supervised* manner( the target data is known, for example regression. )<br/>
 [LSTMs](https://machinelearningmastery.com/gentle-introduction-long-short-term-memory-networks-experts/) are known to learn the order dependence( in our case the time order dependence) in the sequence predictions.
 Here the encoders are fed in with the data since last 28 days back  for the same time and then the *thought-vector* is passed to the decoder which is in turn fed with the data since last seven days back at the same time and the decoder in turn tries to generate the data for next week. The idea that the *thought vector* would be learned in such a way that it might generalize the future data,i.e. the one week ahead data.The details of the structure used is presented below:
 ![VAE](https://gecgithub01.walmart.com/ukgr/opm_forecasting/blob/master/vae.png)
+
 #### Inference/Prediction:
 This step involves using a [Multilayer Perceptron(MLP)](https://en.wikipedia.org/wiki/Multilayer_perceptron) , is quite robust to outliers,
 The feature extracted by the VAE( the model trained in the pre-training step) is fed to MLP along with the following features :
@@ -25,6 +27,15 @@ Below is the structure of the model used for  MLP <br/>
 The layers with encoder is the layer from the VAE, which looks back into the past data and gives feature extracted out of it.
 Dropouts are used instead of using traditional regularizers as which also acheives the goal of regularization and also it helps to generalize, a lot well, the distribution of the data.
 
+## Data Cleaning and Normalization 
+ASDA OPM time series has a system generated spikes,i.e. Order Download by system, in the time window `00:00 - 06:30` in UK time zone, 
+so this time window has been removed from the time series and furthermore there are instances where due to failures( system crash, payment failures , etc.) where the OPM trends unusually. Those instances were handled using removing the trend and then doing a linear interpolation with adding noise to replace the unusual instances.
+Further more the data is normalized to the range `[0-1]`.
+
+#### Input Data
+The input data to the encoder consists of last 28 days information for the given time. It has 2 features per 28 days. The features are normalized opm values and if the next day is holiday or not. Further more the opm values for each of last 28 days was subtracted from the normalized opm value at the last 28th day.This was done so as to avoid any exponential effects.
+The input/output data to the decoder is similar to that of encoder but the data consists of last/future 7 days data with subtraction offset being last 28th days' normalized opm value.
+
 ####  References
 Following references can be useful:
  * [Introduction to Forecasting in Machine Learning and Deep Learning](https://www.youtube.com/watch?v=bn8rVBuIcFg&t=598s)
@@ -32,10 +43,11 @@ Following references can be useful:
  * [Keras Functional API](https://keras.io/getting-started/functional-api-guide/)
  * [Two Effective Algorithms for Time Series Forecasting](https://www.youtube.com/watch?v=VYpAodcdFfA&t=3s)
  * [Linear Model For Time Series Forecasting](https://www.youtube.com/watch?v=68ABAU_V8qI)
+ 
 ### To Execute
+
 #### Active Learning :
-    ```python .\train.py    --input_path <path_to_csv> --model_path <path_to_mlp> --encoder_path <path_to_vae> --pred_dir <dir_to_csv_in> --model_dir <dir_to_store_model> --epochs <number_of_epochs>```
-    ```
+    `      python .\train.py    --input_path <path_to_csv> --model_path <path_to_mlp> --encoder_path <path_to_vae> --pred_dir <dir_to_csv_in> --model_dir <dir_to_store_model> --epochs <number_of_epochs>    
             usage: train.py [-h] [--auto_dt AUTO_DT] [--date_to_pred DATE_TO_PRED]
                             --input_path INPUT_PATH --model_path MODEL_PATH --encoder_path
                             ENCODER_PATH [--model_dir MODEL_DIR] [--epochs EPOCHS]
@@ -61,11 +73,11 @@ Following references can be useful:
                                     batch size
             --pred_dir PRED_DIR   directory to store the output
             --to_UK_tz TO_UK_TZ   True => datetime in UK time zone else in INDIAN time
-                                    zone
-    ```
+                                    zone 
+      `
+    
 #### Training MLP only :
-    ```
-            usage: model_train.py [-h] [--fresh FRESH] --input_path INPUT_PATH
+    `usage: model_train.py [-h] [--fresh FRESH] --input_path INPUT_PATH
                                 [--mlp_path MLP_PATH] [--freeze_encoder FREEZE_ENCODER]
                                 --encoder_path ENCODER_PATH [--store_at STORE_AT]
                                 [--epochs EPOCHS] [--batch_size BATCH_SIZE]
@@ -85,14 +97,12 @@ Following references can be useful:
             --epochs EPOCHS       number of epochs, applicable only for training
             --batch_size BATCH_SIZE
                                     batch size
+    `
     
-    ```
 #### Training Encoder Only:
- ```
-            usage: encoder_train.py [-h] [--fresh FRESH] --input_path INPUT_PATH
+          `usage: encoder_train.py [-h] [--fresh FRESH] --input_path INPUT_PATH
                                     [--encoder_path ENCODER_PATH] [--store_at STORE_AT]
                                     [--epochs EPOCHS] [--batch_size BATCH_SIZE]
-
             optional arguments:
             -h, --help            show this help message and exit
             --fresh FRESH         True => Train the model from scratch !!
@@ -104,6 +114,24 @@ Following references can be useful:
             --epochs EPOCHS       number of epochs, applicable only for training
             --batch_size BATCH_SIZE
                                     batch size
-    
-    ```
-    
+           `
+### Project By:
+
+#### Ankit Kumar Singh 
+Summer Intern 19 <br/>
+CSE Dept. IIT Kanpur, India
+
+#### Sibaprasad Tripathy
+Mentor,<br/>
+Senior Software Engineer,<br/>
+Intl UK eCom - Leeds Support
+Walmart Labs India
+
+#### Sameesh Gupta
+Mentor,Manager,<br/>
+Senior Manager II- Quality Engineering,<br/>
+Intl UK eCom - Leeds Support<br/>
+Walmart Labs India
+
+
+   
