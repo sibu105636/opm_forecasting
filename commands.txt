@@ -1,0 +1,5 @@
+python3 encoder_train.py --fresh False --input_path 'dataset/grafana_data_export.csv' --encoder_path 'stored_models/vae.hdf5' 
+python3 model_train.py --encoder_path 'stored_models/vae.hdf5' --input_path 'dataset/grafana_data_export.csv' --epochs 1 --fresh False --mlp_path 'stored_models/mlp__.hdf5'
+
+python3 train.py --input_path 'dataset/grafana_data_export.csv' --model_path 'stored_models/mlp.hdf5' --encoder_path 'stored_models/vae.hdf5' --pred_dir ./ --model_dir 'stored_models/' --epochs 1 --date_to_pred '2019-7-26' --auto_dt 'false'
+python3 train.py --input_path 'dataset/grafana_data_export.csv' --model_path 'stored_models/mlp__.hdf5' --encoder_path 'stored_models/vae_.hdf5' --pred_dir ./ --model_dir 'stored_models/' --epochs 1 --date_to_pred '2019-7-26' --auto_dt 'false'
