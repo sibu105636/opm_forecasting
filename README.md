@@ -121,13 +121,13 @@ Following references can be useful:
 Summer Intern 19 <br/>
 CSE Dept. IIT Kanpur, India
 
-#### [Sibaprasad Tripathy](mailto:Sibaprasad.Tripathy@walmartlabs.com)
+#### [Sibaprasad Tripathy]
 Mentor,<br/>
 Senior Software Engineer,<br/>
 Intl UK eCom - Leeds Support,<br/>
 Walmart Labs India
 
-#### [Sameesh Gupta](mailto:SGupta12@walmartlabs.com)
+#### [Sameesh Gupta]
 Mentor,Manager,<br/>
 Senior Manager II- Quality Engineering,<br/>
 Intl UK eCom - Leeds Support<br/>
